@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>奶龙知识大考验</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --yellow: #ffc93c;
+    --yellow-deep: #ffb800;
+    --cream: #fff6df;
+    --ink: #4a3503;
+    --ink-soft: #8a6d1f;
+    --green: #4caf6d;
+    --red: #ef5350;
+  }
+  html, body { height: 100%; }
+  body {
+    background: linear-gradient(180deg, #ffe9a8, #ffd66b 60%, #ffc93c);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    color: var(--ink);
+    display: flex; justify-content: center;
+    overflow-x: hidden;
+  }
+  .stage {
+    width: 100%; max-width: 460px; min-height: 100dvh;
+    padding: 0 18px calc(20px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+
+  /* ===== 屏幕切换 ===== */
+  .screen { display: none; flex-direction: column; flex: 1; animation: pop .3s ease-out; }
+  .screen.on { display: flex; }
+  @keyframes pop { from { opacity: 0; transform: scale(.96) translateY(10px); } to { opacity: 1; transform: none; } }
+
+  /* ===== 开场 ===== */
+  .home { align-items: center; text-align: center; padding-top: 8vh; }
+  .dragon { width: 170px; height: auto; animation: bob 2.4s ease-in-out infinite; filter: drop-shadow(0 10px 18px rgba(160,110,0,.35)); }
+  @keyframes bob { 0%,100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-12px) rotate(2deg); } }
+  .home h1 {
+    font-size: 34px; letter-spacing: 2px; margin-top: 18px;
+    color: var(--ink);
+    text-shadow: 0 2px 0 rgba(255,255,255,.5);
+  }
+  .home .tag { font-size: 15px; color: var(--ink-soft); margin-top: 8px; }
+  .visit-pill {
+    margin-top: 16px; background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.8);
+    border-radius: 999px; padding: 6px 16px; font-size: 12.5px; color: var(--ink-soft);
+    backdrop-filter: blur(4px);
+  }
+  .visit-pill b { color: #d97a00; }
+  .btn {
+    display: block; width: 100%; border: none; cursor: pointer;
+    border-radius: 999px; padding: 16px 0;
+    font-size: 18px; font-weight: 700; letter-spacing: 2px;
+    color: #fff; background: linear-gradient(180deg, #ffb340, #f59a00);
+    box-shadow: 0 6px 0 #d98a00, 0 10px 20px rgba(217,138,0,.4);
+    transition: transform .12s ease, box-shadow .12s ease;
+    margin-top: 34px;
+  }
+  .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #d98a00, 0 4px 10px rgba(217,138,0,.4); }
+  .btn.ghost {
+    background: rgba(255,255,255,.6); color: var(--ink);
+    box-shadow: 0 4px 0 rgba(190,140,20,.5); font-size: 15px; letter-spacing: 1px;
+    margin-top: 14px; padding: 13px 0;
+  }
+  .home-tip { margin-top: 14px; font-size: 12px; color: var(--ink-soft); }
+
+  /* ===== 答题 ===== */
+  .quiz-top { padding-top: 18px; }
+  .progress-line { display: flex; align-items: center; gap: 10px; }
+  .progress-line { flex: 1; height: 10px; border-radius: 999px; background: rgba(255,255,255,.5); overflow: hidden; }
+  .progress-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #ffb340, #f59a00); transition: width .35s ease; }
+  .qnum { font-size: 13px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; }
+  .score-chip {
+    align-self: flex-end; margin-top: 10px;
+    background: rgba(255,255,255,.6); border-radius: 999px; padding: 4px 14px;
+    font-size: 13px; font-weight: 700; color: #d97a00;
+  }
+  .qcard {
+    position: relative;
+    margin-top: 26px; background: var(--cream); border-radius: 22px;
+    padding: 24px 20px; box-shadow: 0 8px 24px rgba(160,110,0,.18);
+  }
+  .qdragon {
+    position: absolute; top: -30px; right: 12px; width: 58px; height: auto;
+    opacity: 0; transform: scale(.4); transition: opacity .18s ease, transform .18s ease;
+    pointer-events: none; filter: drop-shadow(0 4px 8px rgba(160,110,0,.3));
+  }
+  .qdragon.show { opacity: 1; transform: scale(1); }
+  .qdragon.laugh { animation: laugh .55s ease-in-out 3; }
+  .qdragon.happy { animation: happyb .45s ease 2; }
+  @keyframes laugh {
+    0%,100% { transform: scale(1) rotate(0); }
+    25% { transform: scale(1.1) rotate(-11deg); }
+    50% { transform: scale(1.1) rotate(9deg); }
+    75% { transform: scale(1.1) rotate(-7deg); }
+  }
+  @keyframes happyb {
+    0%,100% { transform: scale(1) translateY(0); }
+    50% { transform: scale(1.06) translateY(-10px); }
+  }
+  .taunt { display: block; margin-bottom: 6px; color: #d4483b; font-weight: 700; }
+  .qcard .q { font-size: 19px; font-weight: 700; line-height: 1.55; }
+  .opts { margin-top: 18px; display: flex; flex-direction: column; gap: 12px; }
+  .opt {
+    display: flex; align-items: center; gap: 12px;
+    background: #fff; border: 2px solid #f0e2b8; border-radius: 16px;
+    padding: 14px 16px; font-size: 16px; cursor: pointer; text-align: left;
+    transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    font-family: inherit; color: var(--ink);
+  }
+  .opt:active { transform: scale(.97); }
+  .opt .key {
+    flex: 0 0 28px; height: 28px; border-radius: 50%;
+    background: #ffe9ad; color: #a67c00; font-weight: 700; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .opt.right { background: #e8f8ee; border-color: var(--green); }
+  .opt.right .key { background: var(--green); color: #fff; }
+  .opt.wrong { background: #fdecec; border-color: var(--red); animation: shake .3s; }
+  .opt.wrong .key { background: var(--red); color: #fff; }
+  .opt.dim { opacity: .5; }
+  @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .fact {
+    margin-top: 16px; background: #fff8e3; border-left: 4px solid var(--yellow-deep);
+    border-radius: 0 12px 12px 0; padding: 12px 14px; font-size: 13.5px; line-height: 1.6;
+    color: #7a5c10; display: none;
+  }
+  .fact.show { display: block; animation: pop .25s ease-out; }
+  .fact b { color: #d97a00; }
+  .next-btn { margin-top: 18px; }
+
+  /* ===== 结果 ===== */
+  .result { align-items: center; text-align: center; padding-top: 6vh; }
+  .result .big-dragon { width: 130px; height: auto; animation: bob 2s ease-in-out infinite; }
+  .score-ring {
+    margin-top: 10px; font-size: 15px; color: var(--ink-soft);
+  }
+  .score-num { font-size: 56px; font-weight: 800; color: #d97a00; line-height: 1.1; text-shadow: 0 3px 0 rgba(255,255,255,.55); }
+  .score-num small { font-size: 20px; }
+  .title-card {
+    margin-top: 14px; background: var(--cream); border-radius: 20px; padding: 18px 24px;
+    box-shadow: 0 8px 24px rgba(160,110,0,.18); width: 100%;
+  }
+  .title-card .label { font-size: 12.5px; color: var(--ink-soft); letter-spacing: 3px; }
+  .title-card .name { font-size: 26px; font-weight: 800; color: var(--ink); margin-top: 6px; letter-spacing: 2px; }
+  .title-card .beat { margin-top: 10px; font-size: 13.5px; color: var(--ink-soft); }
+  .title-card .beat b { color: #d97a00; }
+  .result .btn { margin-top: 24px; }
+  .foot {
+    margin-top: auto; padding-top: 26px; text-align: center;
+    font-size: 11px; color: rgba(138,109,31,.7);
+  }
+  .foot a { color: inherit; text-decoration: none; }
+
+  /* ===== 彩带 ===== */
+  .confetti {
+    position: fixed; top: -12px; width: 10px; height: 14px;
+    border-radius: 2px; z-index: 50; pointer-events: none;
+    animation: fall linear forwards;
+  }
+  @keyframes fall { to { transform: translateY(110vh) rotate(720deg); opacity: .9; } }
+
+  /* ===== 后台统计 ===== */
+  .admin {
+    display: none; margin: 14px 0; background: #fffdf5; border: 1px dashed #e0b64a;
+    border-radius: 14px; padding: 14px 16px; font-size: 13px; width: 100%;
+  }
+  .admin.show { display: block; }
+  .admin h3 { font-size: 14px; margin-bottom: 8px; color: var(--ink); }
+  .admin .row { display: flex; justify-content: space-between; padding: 5px 0; color: var(--ink-soft); }
+  .admin .row b { color: #d97a00; font-size: 15px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ========== 开场 ========== -->
+  <div class="screen home on" id="scr-home">
+    <img class="dragon" id="dragonHome" src="nailong-cut.png" alt="奶龙">
+    <h1>奶龙知识大考验</h1>
+    <p class="tag">8 道题，测测你是几级奶龙粉 🍼🐲</p>
+    <div class="visit-pill">🔥 已有 <b id="visitNum">…</b> 人挑战</div>
+    <button class="btn" id="startBtn">开始挑战</button>
+    <p class="home-tip">答对得分 · 考完生成专属称号 · 分享考倒好友</p>
+
+    <div class="admin" id="adminPanel">
+      <h3>📊 后台数据（仅自己可见）</h3>
+      <div class="row"><span>总访问人数</span><b id="admVisit">-</b></div>
+      <div class="row"><span>完成答题人数</span><b id="admFinish">-</b></div>
+      <div class="row"><span>分享点击次数</span><b id="admShare">-</b></div>
+      <div class="row"><span>完成率</span><b id="admRate">-</b></div>
+    </div>
+
+    <div class="foot">本页面为粉丝自制娱乐问答，与官方无关 · <a href="?admin=1">📊</a></div>
+  </div>
+
+  <!-- ========== 答题 ========== -->
+  <div class="screen" id="scr-quiz">
+    <div class="quiz-top">
+      <div class="progress-line">
+        <span class="qnum" id="qNum">第 1/8 题</span>
+        <div class="progress-line"><div class="progress-fill" id="qBar"></div></div>
+      </div>
+      <div class="score-chip">得分 <span id="scoreNow">0</span></div>
+    </div>
+    <div class="qcard">
+      <img class="qdragon" id="qDragon" src="nailong-cut.png" alt="">
+      <div class="q" id="qText"></div>
+      <div class="opts" id="qOpts"></div>
+      <div class="fact" id="qFact"></div>
+      <button class="btn next-btn" id="nextBtn" style="display:none">下一题 →</button>
+    </div>
+  </div>
+
+  <!-- ========== 结果 ========== -->
+  <div class="screen result" id="scr-result">
+    <img class="big-dragon dragon" id="dragonResult" src="nailong-cut.png" alt="奶龙">
+    <div class="score-num"><span id="scoreFinal">0</span><small> 分</small></div>
+    <div class="score-ring">满分 80 分</div>
+    <div class="title-card">
+      <div class="label">你 的 称 号</div>
+      <div class="name" id="titleName">奶龙路人甲</div>
+      <div class="beat" id="beatText"></div>
+    </div>
+    <button class="btn" id="shareBtn">📣 分享，考倒好友</button>
+    <button class="btn ghost" id="retryBtn">🔁 再来一局</button>
+    <div class="foot">本页面为粉丝自制娱乐问答，与官方无关</div>
+  </div>
+
+</div>
+
+<script>
+/* ================= 计数统计（Abacus 免注册） ================= */
+var NS = "zjzsw-nailong-quiz";
+function hitCounter(key) {
+  fetch("https://abacus.jasoncameron.dev/hit/" + NS + "/" + key).catch(function(){});
+}
+function getCounter(key, cb) {
+  fetch("https://abacus.jasoncameron.dev/get/" + NS + "/" + key)
+    .then(function(r){ return r.json(); })
+    .then(function(d){ cb(d.value || 0); })
+    .catch(function(){ cb(null); });
+}
+
+/* 访问计数：每设备只记一次 */
+if (!localStorage.getItem("nl_counted")) {
+  hitCounter("visits");
+  localStorage.setItem("nl_counted", "1");
+}
+getCounter("visits", function(v) {
+  document.getElementById("visitNum").textContent = v == null ? "很多" : v;
+});
+
+/* 后台面板 */
+if (/[?&]admin=1/.test(location.search)) {
+  var p = document.getElementById("adminPanel");
+  p.classList.add("show");
+  getCounter("visits", function(v){ document.getElementById("admVisit").textContent = v; calcRate(); });
+  getCounter("finishes", function(v){ document.getElementById("admFinish").textContent = v; calcRate(); });
+  getCounter("shares", function(v){ document.getElementById("admShare").textContent = v; });
+  function calcRate() {
+    var a = +document.getElementById("admVisit").textContent, b = +document.getElementById("admFinish").textContent;
+    if (a > 0 && !isNaN(b)) document.getElementById("admRate").textContent = Math.round(b / a * 100) + "%";
+  }
+}
+
+/* ================= 题库 ================= */
+var QUESTIONS = [
+  {
+    q: "奶龙的身体是什么颜色的？",
+    opts: ["粉色", "黄色", "绿色", "蓝色"],
+    a: 1,
+    fact: "奶龙是一只<b>全身淡黄、胖乎乎</b>的小恐龙，标志性的大肚子 duangduang 的～"
+  },
+  {
+    q: "奶龙来自哪里？",
+    opts: ["地球深山", "海底龙宫", "异星", "恐龙化石复活"],
+    a: 2,
+    fact: "奶龙是一只<b>流落地球的异星幼龙</b>，因为所在的星球发生变故才来到地球。"
+  },
+  {
+    q: "奶龙最好的朋友是谁？",
+    opts: ["暴暴龙", "小七", "脏丝", "MR.BONE"],
+    a: 1,
+    fact: "<b>小七</b>是天才少年发明家，奶龙最好的朋友。小七发明了空间穿梭机，带奶龙去武林、荒岛、游戏空间冒险。"
+  },
+  {
+    q: "作为一枚资深吃货，奶龙最爱吃什么？",
+    opts: ["青菜沙拉", "鲱鱼罐头", "减肥餐", "烧烤"],
+    a: 3,
+    fact: "奶龙是「万物皆可吃」的吃货龙，<b>尤其爱烧烤</b>，天天喊减肥却管不住嘴 😂"
+  },
+  {
+    q: "下面哪个技能是奶龙不会的？",
+    opts: ["喷火", "隐身", "变色", "变大变小"],
+    a: 1,
+    fact: "奶龙会<b>喷火、变色、变大变小</b>，还能发能量炮，但隐身真不会～"
+  },
+  {
+    q: "奶龙的梦想是什么？",
+    opts: ["成为村里最大的龙", "开一家烧烤店", "当宇宙首富", "学会飞"],
+    a: 0,
+    fact: "奶龙的梦想是<b>成为村里最大的龙</b>，还为此向流星许愿，结果头变大好几倍 😂"
+  },
+  {
+    q: "奶龙的身高体重设定是？",
+    opts: ["30cm · 5斤", "1米8 · 2吨", "50米 · 100吨", "和小七一样"],
+    a: 1,
+    fact: "官方设定：奶龙<b>只有 3 岁</b>，但身高一米八、体重 2 吨——是只重量级小胖龙。"
+  },
+  {
+    q: "总想取代奶龙、自称要当「宇宙最强的龙」的反派是？",
+    opts: ["小七", "霸王龙洛齐", "暴暴龙", "牛来"],
+    a: 2,
+    fact: "<b>暴暴龙</b>是从外星追杀奶龙到地球的刺客龙，屡战屡败但锲而不舍，是搞笑担当二号。"
+  }
+];
+
+var TITLES = [
+  { min: 0,  name: "奶龙路人甲", text: "看来你和奶龙还不熟，快去补番吧～" },
+  { min: 30, name: "奶龙小学徒", text: "入门了入门了，奶龙愿意分你一口烧烤 🍢" },
+  { min: 50, name: "资深奶龙粉", text: "不错哦！奶龙的大肚子允许你 rua 一下" },
+  { min: 70, name: "奶龙博士 🎓", text: "天呐，你比小七还懂奶龙！" }
+];
+
+/* ================= 奶龙嘲笑语录 ================= */
+var TAUNTS = [
+  "奶龙笑到肚子发抖：这题你都能错？",
+  "奶龙：假粉！你肯定是假粉！",
+  "奶龙摇了摇头，并对你喷了一小口火 🔥",
+  "奶龙：你怕不是暴暴龙派来的卧底吧！",
+  "奶龙把烧烤举得远远的：答对才给你吃 🍢",
+  "奶龙：哼，本龙三岁就会这题了！",
+  "奶龙笑出鹅叫：嘎——嘎——嘎——",
+  "奶龙：我的大肚皮都比你了解我！"
+];
+
+/* ================= 游戏逻辑 ================= */
+var order = [], current = 0, score = 0, answered = false;
+var screens = {
+  home: document.getElementById("scr-home"),
+  quiz: document.getElementById("scr-quiz"),
+  result: document.getElementById("scr-result")
+};
+function show(name) {
+  for (var k in screens) screens[k].classList.remove("on");
+  screens[name].classList.add("on");
+  window.scrollTo(0, 0);
+}
+
+function shuffle(a) {
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+document.getElementById("startBtn").onclick = startGame;
+document.getElementById("retryBtn").onclick = startGame;
+
+function startGame() {
+  order = shuffle(QUESTIONS.slice());
+  current = 0; score = 0;
+  document.getElementById("scoreNow").textContent = "0";
+  show("quiz");
+  renderQ();
+}
+
+function renderQ() {
+  answered = false;
+  var item = order[current];
+  document.getElementById("qNum").textContent = "第 " + (current + 1) + "/" + order.length + " 题";
+  document.getElementById("qBar").style.width = (current / order.length * 100) + "%";
+  document.getElementById("qText").textContent = item.q;
+  var box = document.getElementById("qOpts");
+  box.innerHTML = "";
+  var keys = ["A", "B", "C", "D"];
+  // 选项乱序，但记录正确答案新位置
+  var idx = shuffle(item.opts.map(function(_, i){ return i; }));
+  idx.forEach(function(origI, newI) {
+    var b = document.createElement("button");
+    b.className = "opt";
+    b.innerHTML = '<span class="key">' + keys[newI] + '</span><span>' + item.opts[origI] + '</span>';
+    b.onclick = function() { answer(b, origI === item.a, item); };
+    box.appendChild(b);
+  });
+  var fact = document.getElementById("qFact");
+  fact.classList.remove("show");
+  var qd = document.getElementById("qDragon");
+  qd.classList.remove("show", "laugh", "happy");
+  document.getElementById("nextBtn").style.display = "none";
+}
+
+function answer(btn, right, item) {
+  if (answered) return;
+  answered = true;
+  var opts = document.querySelectorAll("#qOpts .opt");
+  opts.forEach(function(o) { o.classList.add("dim"); });
+  if (right) {
+    btn.classList.remove("dim");
+    btn.classList.add("right");
+    score += 10;
+    document.getElementById("scoreNow").textContent = score;
+  } else {
+    btn.classList.remove("dim");
+    btn.classList.add("wrong");
+    // 标出正确答案
+    var item2 = order[current];
+    opts.forEach(function(o) {
+      if (o.querySelector("span:last-child").textContent === item2.opts[item2.a]) {
+        o.classList.remove("dim");
+        o.classList.add("right");
+      }
+    });
+  }
+  document.getElementById("qBar").style.width = ((current + 1) / order.length * 100) + "%";
+  var fact = document.getElementById("qFact");
+  var qd = document.getElementById("qDragon");
+  qd.classList.remove("show", "laugh", "happy");
+  void qd.offsetWidth; /* 重启动画 */
+  if (right) {
+    fact.innerHTML = "🎉 答对啦！" + item.fact;
+    qd.classList.add("show", "happy");
+  } else {
+    var t = TAUNTS[Math.floor(Math.random() * TAUNTS.length)];
+    fact.innerHTML = '<span class="taunt">🤣 ' + t + '</span>' + item.fact;
+    qd.classList.add("show", "laugh");
+  }
+  fact.classList.add("show");
+  var nb = document.getElementById("nextBtn");
+  nb.textContent = current === order.length - 1 ? "查看我的称号 →" : "下一题 →";
+  nb.style.display = "block";
+  nb.onclick = function() {
+    current++;
+    if (current >= order.length) finish();
+    else renderQ();
+  };
+}
+
+function finish() {
+  hitCounter("finishes");
+  document.getElementById("scoreFinal").textContent = score;
+  var t = TITLES[0];
+  TITLES.forEach(function(x) { if (score >= x.min) t = x; });
+  document.getElementById("titleName").textContent = t.name;
+  // 娱乐向百分比（非真实统计）
+  var pct = Math.min(99, Math.round(score * 1.15 + 8));
+  document.getElementById("beatText").innerHTML = t.text + "<br>超过了约 <b>" + pct + "%</b> 的挑战者（娱乐算法）";
+  show("result");
+  if (score >= 40) confetti();
+}
+
+function confetti() {
+  var colors = ["#ffb340", "#f59a00", "#ffd84d", "#ff8a80", "#81c784", "#64b5f6"];
+  for (var i = 0; i < 36; i++) {
+    var c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (1.6 + Math.random() * 1.4) + "s";
+    c.style.animationDelay = (Math.random() * 0.5) + "s";
+    document.body.appendChild(c);
+    (function(el){ setTimeout(function(){ el.remove(); }, 3600); })(c);
+  }
+}
+
+/* ================= 分享 ================= */
+document.getElementById("shareBtn").onclick = function() {
+  hitCounter("shares");
+  var text = "我在「奶龙知识大考验」得了 " + score + " 分，拿下称号「" +
+    document.getElementById("titleName").textContent + "」！你敢来挑战我吗？🍼🐲";
+  var url = location.origin + location.pathname;
+  if (navigator.share) {
+    navigator.share({ title: "奶龙知识大考验", text: text, url: url }).catch(function(){});
+  } else {
+    var ta = document.createElement("textarea");
+    ta.value = text + " 👉 " + url;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); alert("已复制分享文案，去粘贴给好友吧～"); }
+    catch (e) { prompt("复制这段话分享给好友：", ta.value); }
+    ta.remove();
+  }
+};
+</script>
+</body>
+</html>
